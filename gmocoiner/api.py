@@ -66,10 +66,10 @@ class GMOCoin(object):
         self.logger.debug(f'sending req to {prepped.url}: {prepped.body}')
         
         if self.late_limit:
-            now = time.time()
-            if self.last_req_time + 1 > now:
-                wait_time = self.last_req_time + 1 - now
-                time.sleep(wait_time)
+            now = time.time()*1000
+            if self.last_req_time + 300 > now:
+                wait_time = self.last_req_time + 300 - now
+                time.sleep(wait_time/1000)
 
         resp = None
         try:
@@ -79,7 +79,7 @@ class GMOCoin(object):
             self.logger.error(e)
         
         if self.late_limit:
-            self.last_req_time = time.time()
+            self.last_req_time = time.time()*1000
 
         self.logger.debug(f'{resp} {resp.text}')
         self.lock.release()
