@@ -1,5 +1,6 @@
 import json
 import time
+import threading
 from logging import (
     DEBUG, FileHandler, Formatter, NullHandler, StreamHandler, getLogger)
 
@@ -37,7 +38,9 @@ class GMOCoin(object):
 
         self.late_limit = late_limit
         self.last_req_time = 0
-    
+
+        self.lock = threading.Lock()
+
     def _request(self, method, path, payload, auth):
         for k, v in list(payload.items()):
             if v is None:
@@ -57,6 +60,7 @@ class GMOCoin(object):
             endpoint = self.endpoint['private']
             self.s.auth = self.gmo_auth
 
+        self.lock.acquire()
         req = Request(method, endpoint + path, data=body, params=query)
         prepped = self.s.prepare_request(req)
         self.logger.debug(f'sending req to {prepped.url}: {prepped.body}')
@@ -78,6 +82,7 @@ class GMOCoin(object):
             self.last_req_time = time.time()
 
         self.logger.debug(f'{resp} {resp.text}')
+        self.lock.release()
 
         return resp
 
