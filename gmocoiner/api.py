@@ -18,8 +18,8 @@ class GMOCoin(object):
     :type api_key: str
     :param secret: 秘密鍵
     :type secret: str
-    :param late_limit: レート制限をクライアント制御する
-    :type late_limit: bool
+    :param rate_limit: レート制限をクライアント制御する
+    :type rate_limit: bool
     :param logger: ロガー
     :type logger: Logger
     """
@@ -28,7 +28,7 @@ class GMOCoin(object):
         'private': 'https://api.coin.z.com/private'
     }
 
-    def __init__(self, api_key, secret, late_limit=True, logger=None):
+    def __init__(self, api_key, secret, rate_limit=True, logger=None):
         self.logger = logger or getLogger(__name__)
 
         self.s = Session()
@@ -36,7 +36,7 @@ class GMOCoin(object):
 
         self.gmo_auth = GMOCoinAuth(api_key, secret)
 
-        self.late_limit = late_limit
+        self.rate_limit = rate_limit
         self.last_req_time = 0
 
         self.lock = threading.Lock()
@@ -65,7 +65,7 @@ class GMOCoin(object):
         prepped = self.s.prepare_request(req)
         self.logger.debug(f'sending req to {prepped.url}: {prepped.body}')
         
-        if self.late_limit:
+        if self.rate_limit:
             now = time.time()*1000
             if self.last_req_time + 300 > now:
                 wait_time = self.last_req_time + 300 - now
@@ -78,7 +78,7 @@ class GMOCoin(object):
         except HTTPError as e:
             self.logger.error(e)
         
-        if self.late_limit:
+        if self.rate_limit:
             self.last_req_time = time.time()*1000
 
         self.logger.debug(f'{resp} {resp.text}')
